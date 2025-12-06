@@ -1,0 +1,62 @@
+# ==============================
+#  AuthLogin .gitignore
+#  Backend: FastAPI (Python)
+#  Frontend: React + Vite (TypeScript)
+# ==============================
+
+# --- Environment & Secrets ---
+.env
+*.env
+.env.*
+.envrc
+*.local
+
+# --- Python cache & compiled files ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+build/
+develop-eggs/
+dist/
+pip-wheel-metadata/
+__pypackages__/
+
+# --- Virtual environments ---
+venv/
+.venv/
+
+# --- IDE / Editor files ---
+.vscode/
+.idea/
+*.swp
+
+# --- Local databases or artifacts ---
+*.db
+*.sqlite3
+backend/logs/
+logs/
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+frontend/.vite/
+frontend/build/
+frontend/.turbo/
+frontend/.cache/
+frontend/.next/
+
+# --- Testing & Coverage ---
+.coverage
+htmlcov/
+pytest_cache/
+coverage.xml
+jest-cache/
+jest-test-results.json
+
+# --- OS-specific ---
+.DS_Store
+Thumbs.db
+
