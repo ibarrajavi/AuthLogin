@@ -10,8 +10,8 @@ Key fields:
 - JWT_EXPIRY_MINUTES: short-lived access tokens.
 - JWT_REFRESH_EXPIRY: refresh token lifetime (days).
 - JWT_LEEWAY: leeway for JWT validation (seconds).
-- TOKEN_BYTES: 
-- TOKEN_TTL_MIN: 
+- TOKEN_BYTES: number of random bytes for secure token generation (used by secrets.token_urlsafe).
+- TOKEN_TTL_MIN: default time-to-live in minutes for token expiration calculations.
 """
 
 class Settings(BaseSettings):
