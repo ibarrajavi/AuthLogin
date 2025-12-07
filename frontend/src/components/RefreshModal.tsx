@@ -25,7 +25,7 @@ export default function RefreshModal() {
 
     // Already expired - logout immediately
     if (timeLeft <= 0) {
-      handleSignOut()
+      handleLogOut()
       return
     }
 
@@ -48,7 +48,7 @@ export default function RefreshModal() {
 
     // Schedule auto-logout at expiry
     expiryTimeout = setTimeout(() => {
-      handleSignOut()
+      handleLogOut()
     }, timeLeft)
 
     return () => {
@@ -57,7 +57,7 @@ export default function RefreshModal() {
     }
   }, [isAuthenticated, expiresAt])
 
-  const handleStaySignedIn = async () => {
+  const handleStayLoggedIn = async () => {
     if (!token) return
     setLoading(true)
 
@@ -69,13 +69,13 @@ export default function RefreshModal() {
       setOpen(false)
     } else {
       // Refresh failed, force logout
-      handleSignOut()
+      handleLogOut()
     }
 
     setLoading(false)
   }
 
-  const handleSignOut = async () => {
+  const handleLogOut = async () => {
     if (accessToken) {
       await logoutUser(accessToken)
     }
@@ -90,23 +90,23 @@ export default function RefreshModal() {
         <DialogHeader>
           <DialogTitle className="text-zinc-50 text-center">Session Expiring</DialogTitle>
           <DialogDescription className="text-zinc-400 text-center">
-            Your session is about to expire. Would you like to stay signed in?
+            Your session is about to expire. Would you like to stay logged in?
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-3 justify-center mt-4">
           <Button
             variant="outline"
-            onClick={handleSignOut}
+            onClick={handleLogOut}
             className="text-zinc-900 hover:bg-red-400 hover:text-zinc-50 cursor-pointer"
           >
-            Sign Out
+            Logout
           </Button>
           <Button
-            onClick={handleStaySignedIn}
+            onClick={handleStayLoggedIn}
             disabled={loading}
             className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200 cursor-pointer"
           >
-            {loading ? 'Refreshing...' : 'Stay Signed In'}
+            {loading ? 'Refreshing...' : 'Stay Logged In'}
           </Button>
         </div>
       </DialogContent>

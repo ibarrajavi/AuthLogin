@@ -29,7 +29,7 @@ export default function Success() {
             onClick={handleLogout} 
             className="bg-zinc-50 text-zinc-900 cursor-pointer hover:bg-red-400 hover:text-zinc-50"
           >
-            Sign Out
+            Logout
           </Button>
         </CardContent>
       </Card>
