@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { refreshToken, logoutUser } from '@/services/api'
+import { logoutUser } from '@/services/api'
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ export default function RefreshModal() {
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
 
-  const { accessToken, refreshToken: token, expiresAt, refresh, logout, isAuthenticated } = useAuth()
+  const { expiresAt, checkAuth, logout, isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -84,16 +84,12 @@ export default function RefreshModal() {
   }, [open, expiresAt])
 
   const handleStayLoggedIn = async () => {
-    if (!token) return
     setLoading(true)
 
-    const response = await refreshToken(token)
-
-    if (response.success && response.access_token && response.refresh_token) {
-      const expiresIn = response.expires_in || 900
-      refresh(response.access_token, response.refresh_token, expiresIn)
+    try {
+      await checkAuth()
       setOpen(false)
-    } else {
+    } catch {
       // Refresh failed, force logout
       handleLogOut()
     }
@@ -102,9 +98,7 @@ export default function RefreshModal() {
   }
 
   const handleLogOut = async () => {
-    if (accessToken) {
-      await logoutUser(accessToken)
-    }
+    await logoutUser()
     logout()
     setOpen(false)
     navigate('/login')
@@ -125,7 +119,7 @@ export default function RefreshModal() {
             Your session is about to expire in <span className=" ">{formatCountdown(countdown)}</span>. Would you like to stay logged in?
           </DialogDescription>
         </DialogHeader>
-        <div className="flex gap-3 justify-center mt-4">
+        <div className="flex gap-3 justify-center mt-2">
           <Button
             variant="outline"
             onClick={handleLogOut}

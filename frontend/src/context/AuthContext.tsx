@@ -1,104 +1,110 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { refreshToken as refreshTokenAPI } from '../services/api'
 
 interface AuthContextType {
-    accessToken: string | null
-    refreshToken: string | null
     isAuthenticated: boolean
     expiresAt: number | null
-    login: (accessToken: string, refreshToken: string, expiresIn: number) => void
+    login: (expiresIn: number) => void
     logout: () => void
-    refresh: (accessToken: string, refreshToken: string, expiresIn: number) => void
+    checkAuth: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const STORAGE_KEYS = {
-    ACCESS_TOKEN: 'auth_access_token',
-    REFRESH_TOKEN: 'auth_refresh_token',
-    EXPIRES_AT: 'auth_expires_at'
-}
+const EXPIRES_AT_KEY = 'auth_expires_at'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [accessToken, setAccessToken] = useState<string | null>(null)
-    const [refreshToken, setRefreshToken] = useState<string | null>(null)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [expiresAt, setExpiresAt] = useState<number | null>(null)
     const [isInitialized, setIsInitialized] = useState(false)
 
-    // Restore auth state from localStorage on mount
+    // Check auth state on mount
     useEffect(() => {
-        const storedAccessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-        const storedRefreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
-        const storedExpiresAt = localStorage.getItem(STORAGE_KEYS.EXPIRES_AT)
+        const checkAuthOnMount = async () => {
+            // Try to get expiration from sessionStorage first
+            const storedExpiresAt = sessionStorage.getItem(EXPIRES_AT_KEY)
 
-        if (storedAccessToken && storedRefreshToken && storedExpiresAt) {
-            const expiryTime = parseInt(storedExpiresAt, 10)
+            if (storedExpiresAt) {
+                const expiresAtTimestamp = parseInt(storedExpiresAt, 10)
+                const timeLeft = expiresAtTimestamp - Date.now()
 
-            // Only restore if token hasn't expired
-            if (expiryTime > Date.now()) {
-                setAccessToken(storedAccessToken)
-                setRefreshToken(storedRefreshToken)
-                setExpiresAt(expiryTime)
-            } else {
-                // Clear expired tokens
-                localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-                localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-                localStorage.removeItem(STORAGE_KEYS.EXPIRES_AT)
+                // If token hasn't expired yet, use stored value
+                if (timeLeft > 0) {
+                    setIsAuthenticated(true)
+                    setExpiresAt(expiresAtTimestamp)
+                    setIsInitialized(true)
+                    return
+                } else {
+                    // Token expired, clear storage
+                    sessionStorage.removeItem(EXPIRES_AT_KEY)
+                }
+            }
+
+            // No valid stored expiration, try to refresh
+            try {
+                const response = await refreshTokenAPI()
+                if (response.success && response.expires_in) {
+                    const newExpiresAt = Date.now() + response.expires_in * 1000
+                    setIsAuthenticated(true)
+                    setExpiresAt(newExpiresAt)
+                    sessionStorage.setItem(EXPIRES_AT_KEY, newExpiresAt.toString())
+                }
+            } catch {
+                // No valid session, user needs to login
+                setIsAuthenticated(false)
+            } finally {
+                setIsInitialized(true)
             }
         }
 
-        setIsInitialized(true)
+        checkAuthOnMount()
     }, [])
 
-    const isAuthenticated = !!accessToken
-
-    const login = (access: string, refresh: string, expiresIn: number) => {
-        const expiryTime = Date.now() + expiresIn * 1000
-
-        setAccessToken(access)
-        setRefreshToken(refresh)
-        setExpiresAt(expiryTime)
-
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access)
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh)
-        localStorage.setItem(STORAGE_KEYS.EXPIRES_AT, expiryTime.toString())
+    const login = (expiresIn: number) => {
+        const newExpiresAt = Date.now() + expiresIn * 1000
+        setIsAuthenticated(true)
+        setExpiresAt(newExpiresAt)
+        sessionStorage.setItem(EXPIRES_AT_KEY, newExpiresAt.toString())
     }
 
     const logout = () => {
-        setAccessToken(null)
-        setRefreshToken(null)
+        setIsAuthenticated(false)
         setExpiresAt(null)
-
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-        localStorage.removeItem(STORAGE_KEYS.EXPIRES_AT)
+        sessionStorage.removeItem(EXPIRES_AT_KEY)
     }
 
-    const refresh = (access: string, newRefresh: string, expiresIn: number) => {
-        const expiryTime = Date.now() + expiresIn * 1000
-
-        setAccessToken(access)
-        setRefreshToken(newRefresh)
-        setExpiresAt(expiryTime)
-
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access)
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefresh)
-        localStorage.setItem(STORAGE_KEYS.EXPIRES_AT, expiryTime.toString())
+    const checkAuth = async () => {
+        try {
+            const response = await refreshTokenAPI()
+            if (response.success && response.expires_in) {
+                const newExpiresAt = Date.now() + response.expires_in * 1000
+                setIsAuthenticated(true)
+                setExpiresAt(newExpiresAt)
+                sessionStorage.setItem(EXPIRES_AT_KEY, newExpiresAt.toString())
+            } else {
+                setIsAuthenticated(false)
+                setExpiresAt(null)
+                sessionStorage.removeItem(EXPIRES_AT_KEY)
+            }
+        } catch {
+            setIsAuthenticated(false)
+            setExpiresAt(null)
+            sessionStorage.removeItem(EXPIRES_AT_KEY)
+        }
     }
 
-    // Don't render children until auth state is restored from localStorage
+    // Don't render children until auth state is checked
     if (!isInitialized) {
         return null
     }
 
     return (
         <AuthContext.Provider value={{
-            accessToken,
-            refreshToken,
             isAuthenticated,
             expiresAt,
             login,
             logout,
-            refresh
+            checkAuth
         }}>
             {children}
         </AuthContext.Provider>

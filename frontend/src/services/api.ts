@@ -17,6 +17,7 @@ interface RegisterRequest {
 interface AuthResponse {
   success?: boolean
   message?: string
+  error?: string
   errors?: string | string[]
   detail?: Array<{ loc: string[]; msg: string; type: string }>
   access_token?: string
@@ -34,6 +35,7 @@ export async function loginUser(credentials: LoginRequest): Promise<AuthResponse
     const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  // Send cookies with request
         body: JSON.stringify(credentials)
     })
     return response.json()
@@ -43,26 +45,26 @@ export async function registerUser(userData: RegisterRequest): Promise<AuthRespo
     const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  // Send cookies with request
         body: JSON.stringify(userData)
     })
     return response.json()
 }
 
-export async function refreshToken(token: string): Promise<AuthResponse> {
+export async function refreshToken(): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
-        headers: {
-             'Content-Type': 'application/json',
-             'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'  // Send cookies with request
     })
     return response.json()
 }
 
-export async function logoutUser(access_token: string): Promise<AuthResponse> {
+export async function logoutUser(): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${access_token}` }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'  // Send cookies with request
     })
     return response.json()
 }

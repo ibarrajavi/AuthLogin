@@ -5,13 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 export default function Success() {
-  const { accessToken, logout } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
-    if (accessToken) {
-      await logoutUser(accessToken)
-    }
+    await logoutUser()
     logout()
     navigate('/login')
   }

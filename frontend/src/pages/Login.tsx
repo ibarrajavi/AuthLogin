@@ -25,9 +25,9 @@ export default function Login() {
 
     const response = await loginUser({ identifier, password })
 
-    if (response.success && response.access_token && response.refresh_token) {
+    if (response.success) {
       const expiresIn = response.expires_in || 900
-      login(response.access_token, response.refresh_token, expiresIn)
+      login(expiresIn)
       navigate('/success')
     } else {
       const errorMessage = Array.isArray(response.error)
