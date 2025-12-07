@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./data/app.db"
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    JWT_EXPIRY_MINUTES: int = 15
+    JWT_EXPIRY_MINUTES: int = 2
     JWT_REFRESH_EXPIRY: int = 7
     JWT_LEEWAY: int = 10
     TOKEN_BYTES: int = 32

@@ -41,10 +41,10 @@ export default function Register() {
         return msg.split('\n')
       })
       setErrors(messages)
-    } else if (Array.isArray(response.error)) {
-      setErrors(response.error)
+    } else if (Array.isArray(response.errors)) {
+      setErrors(response.errors)
     } else {
-      setErrors([response.error || 'Registration failed'])
+      setErrors([response.errors || 'Registration failed'])
     }
 
     setLoading(false)

@@ -17,7 +17,7 @@ interface RegisterRequest {
 interface AuthResponse {
   success?: boolean
   message?: string
-  error?: string | string[]
+  errors?: string | string[]
   detail?: Array<{ loc: string[]; msg: string; type: string }>
   access_token?: string
   refresh_token?: string

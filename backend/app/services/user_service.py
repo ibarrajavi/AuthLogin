@@ -8,6 +8,20 @@ from sqlalchemy.orm import Session
 class UserService:
     @staticmethod
     def create_user(db: Session, user_data: UserCreate):
+        # Pre-check for existing email and username
+        errors = []
+        existing_email = db.query(User).filter(User.email == user_data.email).first()
+        existing_username = db.query(User).filter(User.username == user_data.username).first()
+
+        if existing_email:
+            errors.append("Email already registered")
+
+        if existing_username:
+            errors.append("Username already taken")
+
+        if errors:
+            return {"success": False, "errors": errors}, 400
+        
         db_utils = DatabaseUtils(db)
         
         # Creating an instance for the new user
